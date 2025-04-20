@@ -5,3 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[tools.setuptools.package.find]
+where=["."]
+exclude=["experiments*","test*"]

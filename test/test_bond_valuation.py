@@ -3,6 +3,8 @@ import datetime
 import logging
 from sampytools.logging_utils import init_logging
 
+from fi_utils.bond_valuation import find_next_coupon_date
+
 init_logging(level=logging.INFO)
 
 
@@ -23,6 +25,17 @@ class MyTestCase(unittest.TestCase):
         maturity = datetime.date(2048, 9, 28)
         adate = datetime.date(2025, 3, 17)
         freq = 4
+        next_cpn_date = find_next_coupon_date(
+            adate, maturity, freq=freq, days_per_year=365
+        )
+        print(
+            f"next coupon date when adate is {adate}, maturity is {maturity}, freq is {freq} : {next_cpn_date}"
+        )
+        self.assertGreater(next_cpn_date, adate)
+
+        maturity = datetime.date(2048, 9, 28)
+        adate = datetime.date(2025, 10, 21)
+        freq = 2
         next_cpn_date = find_next_coupon_date(
             adate, maturity, freq=freq, days_per_year=365
         )
@@ -106,6 +119,18 @@ class MyTestCase(unittest.TestCase):
         )
         self.assertTrue(len(possible_coupon_dates) > 2)
 
+    def test_get_next_coupon_dates_in_the_year(self):
+        from fi_utils.bond_valuation import get_next_coupon_dates_in_the_year
+
+        adate = datetime.date(2025, 10, 21)
+        maturity = datetime.date(2048, 9, 25)
+        freq = 2
+        next_coupon_dates = get_next_coupon_dates_in_the_year(adate, maturity, freq)
+        print(
+            f"adate {adate}, maturity {maturity}, freq {freq}, next coupon dates : {next_coupon_dates}"
+        )
+        self.assertTrue(len(next_coupon_dates) == 0)
+
     def test_find_prev_coupon_date(self):
         from fi_utils.bond_valuation import find_prev_coupon_date
 
@@ -130,6 +155,29 @@ class MyTestCase(unittest.TestCase):
             f"adate {adate}, maturity {maturity}, coupon {coupon}, freq {freq}, accrued interest : {accrued_interest}"
         )
         self.assertTrue(accrued_interest < coupon)
+
+    def test_get_no_of_cf_periods(self):
+        from fi_utils.bond_valuation import get_no_of_cf_periods
+
+        adate = datetime.date(2025, 4, 25)
+        maturity = datetime.date(2048, 9, 25)
+        freq = 2
+        next_cpn_date = find_next_coupon_date(adate, maturity, freq)
+        no_of_periods = get_no_of_cf_periods(next_cpn_date, maturity, freq)
+        print(
+            f"beginning date {next_cpn_date}, ending {maturity}, freq {freq}, no of periods : {no_of_periods}"
+        )
+        self.assertTrue(no_of_periods > 0)
+
+        adate = datetime.date(2025, 2, 25)
+        maturity = datetime.date(2048, 9, 25)
+        freq = 2
+        next_cpn_date = find_next_coupon_date(adate, maturity, freq)
+        no_of_periods = get_no_of_cf_periods(next_cpn_date, maturity, freq)
+        print(
+            f"beginning date {next_cpn_date}, ending {maturity}, freq {freq}, no of periods : {no_of_periods}"
+        )
+        self.assertTrue(no_of_periods > 0)
 
     def test_find_matching_interval_in_curve(self):
         from fi_utils.bond_valuation import find_matching_interval_in_curve
@@ -173,7 +221,7 @@ class MyTestCase(unittest.TestCase):
         )
         self.assertTrue(discount_factor > 0)
 
-    def test_calc_cf_of_vanilla_bond(self):
+    def test_get_vanilla_bond_cf_and_time_to_cf(self):
         from fi_utils.bond_valuation import get_vanilla_bond_cf_and_time_to_cf
 
         adate = datetime.date(2025, 4, 21)
@@ -182,6 +230,27 @@ class MyTestCase(unittest.TestCase):
         bond_cf = get_vanilla_bond_cf_and_time_to_cf(adate, maturity, coupon)
         print(bond_cf)
         self.assertTrue(len(bond_cf) > 0)
+
+    def test_calc_pv_of_vanilla_bond(self):
+        from fi_utils.bond_valuation import calc_pv_of_vanilla_bond
+
+        curve = {y: 4.0 + y / 100 for y in range(1, 31)}
+        adate = datetime.date(2025, 4, 25)
+        maturity = datetime.date(2048, 9, 25)
+        coupon = 4.7
+        freq = 2
+        days_per_year = 365
+        pv = calc_pv_of_vanilla_bond(
+            adate, maturity, coupon, curve, freq, days_per_year
+        )
+        print(f"adate {adate}, maturity {maturity}, coupon {coupon}, PV : {pv}")
+        self.assertTrue(pv > 0)
+        coupon = 4.2
+        pv = calc_pv_of_vanilla_bond(
+            adate, maturity, coupon, curve, freq, days_per_year
+        )
+        print(f"adate {adate}, maturity {maturity}, coupon {coupon}, PV : {pv}")
+        self.assertTrue(pv > 0)
 
 
 if __name__ == "__main__":

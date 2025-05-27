@@ -24,10 +24,10 @@ def set_the_day_of_the_date(adate: datetime.date, day: int):
 
 
 def get_possible_coupon_dates_in_specified_years(
-    maturity: datetime.date,
-    specified_years: List[int],
-    freq: int = 2,
-    days_per_year: int = 365,
+        maturity: datetime.date,
+        specified_years: List[int],
+        freq: int = 2,
+        days_per_year: int = 365,
 ) -> List[datetime.date]:
     """
     Get possible coupon dates in the year
@@ -71,7 +71,7 @@ def get_possible_coupon_dates_in_specified_years(
 
 
 def get_possible_coupon_dates_in_the_year(
-    maturity: datetime.date, year: int, freq: int = 2, days_per_year: int = 365
+        maturity: datetime.date, year: int, freq: int = 2, days_per_year: int = 365
 ) -> List[datetime.date]:
     """
     Get possible coupon dates in the year
@@ -87,10 +87,10 @@ def get_possible_coupon_dates_in_the_year(
 
 
 def get_next_coupon_dates_in_the_year(
-    adate: datetime.date,
-    maturity: datetime.date,
-    freq: int = 2,
-    days_per_year: int = 365,
+        adate: datetime.date,
+        maturity: datetime.date,
+        freq: int = 2,
+        days_per_year: int = 365,
 ) -> List[datetime.date]:
     """
     Get the list of next coupon dates that falls in the year of adate
@@ -116,10 +116,10 @@ def get_next_coupon_dates_in_the_year(
 
 
 def find_next_coupon_date(
-    adate: datetime.date,
-    maturity: datetime.date,
-    freq: int = 2,
-    days_per_year: int = 365,
+        adate: datetime.date,
+        maturity: datetime.date,
+        freq: int = 2,
+        days_per_year: int = 365,
 ) -> datetime.date:
     """
     Find next coupon date given as of date, maturity date
@@ -144,10 +144,10 @@ def find_next_coupon_date(
 
 
 def find_prev_coupon_date(
-    adate: datetime.date,
-    maturity: datetime.date,
-    freq: int = 2,
-    days_per_year: int = 365,
+        adate: datetime.date,
+        maturity: datetime.date,
+        freq: int = 2,
+        days_per_year: int = 365,
 ) -> datetime.date:
     """
     Find previous coupon date given as of date and maturity
@@ -175,21 +175,21 @@ def find_prev_coupon_date(
 
 
 def get_no_of_cf_periods(
-    beginning_date: datetime.date,
-    ending_date: datetime.date,
-    freq: int = 2,
-    days_per_year: int = 365,
+        beginning_date: datetime.date,
+        ending_date: datetime.date,
+        freq: int = 2,
+        days_per_year: int = 365,
 ) -> int:
     return int((ending_date - beginning_date).days / days_per_year * freq) + 1
 
 
 def get_vanilla_bond_cf_and_time_to_cf(
-    adate: datetime.date,
-    maturity: datetime.date,
-    coupon: float,
-    freq: int = 2,
-    days_per_year: int = 365,
-    principal: float = 100.0,
+        adate: datetime.date,
+        maturity: datetime.date,
+        coupon: float,
+        freq: int = 2,
+        days_per_year: int = 365,
+        principal: float = 100.0,
 ):
     """
     Get mapping between time to cashflows and cashflows for vanilla bond.
@@ -213,13 +213,13 @@ def get_vanilla_bond_cf_and_time_to_cf(
 
 
 def calculate_pv_from_ytm(
-    ytm: float,
-    coupon_rate: float,
-    adate: datetime.date,
-    maturity: datetime.date,
-    days_per_year: int = 365,
-    freq: int = 2,
-    principal_amount: float = 100.0,
+        ytm: float,
+        coupon_rate: float,
+        adate: datetime.date,
+        maturity: datetime.date,
+        days_per_year: int = 365,
+        freq: int = 2,
+        principal_amount: float = 100.0,
 ) -> float:
     """
     Calculate present value given yield to maturity, coupon rate, as of date, maturity and coupon frequency
@@ -238,42 +238,43 @@ def calculate_pv_from_ytm(
     pv = (coupon_rate / freq) / (1 + ytm / 100) ** time_to_next_cpn_date
     for period in range(1, no_of_periods + 1):
         pv += (coupon_rate / 2) / (1 + ytm / 100) ** (
-            time_to_next_cpn_date + period / freq
+                time_to_next_cpn_date + period / freq
         )
     pv += principal_amount / (1 + ytm / 100) ** (
-        time_to_next_cpn_date + no_of_periods / freq
+            time_to_next_cpn_date + no_of_periods / freq
     )
     return pv
 
 
 def calc_ytm_of_bond(
-    price: float,
-    coupon_rate: float,
-    adate: datetime.date,
-    maturity: datetime.date,
-    days_per_year: int = 365,
-    freq: int = 2,
-    principal_amount: float = 100,
+        price: float,
+        coupon_rate: float,
+        adate: datetime.date,
+        maturity: datetime.date,
+        days_per_year: int = 365,
+        freq: int = 2,
+        principal_amount: float = 100,
 ):
     def objective_func(ytm: np.ndarray):
         ytm = float(ytm)
-        return (
-            price
-            - calculate_pv_from_ytm(
-                ytm, coupon_rate, adate, maturity, days_per_year, freq, principal_amount
-            )
-        ) ** 2
+        pv = calculate_pv_from_ytm(
+            ytm, coupon_rate, adate, maturity, days_per_year, freq, principal_amount
+        )
+        if isinstance(pv, complex):
+            raise ValueError(
+                f"calc_pv_from_ytm returned complex number for ytm : {ytm}, adate {adate},coupon_rate {coupon_rate}, maturity {maturity} -> {pv}")
+        return (price - pv) ** 2
 
     solved_ytm = fsolve(objective_func, np.array(1))
     return float(solved_ytm[0])
 
 
 def calc_accrued_interest(
-    adate: datetime.date,
-    maturity: datetime.date,
-    coupon: float,
-    freq: int = 2,
-    days_per_year: int = 365,
+        adate: datetime.date,
+        maturity: datetime.date,
+        coupon: float,
+        freq: int = 2,
+        days_per_year: int = 365,
 ):
     """
     Calculate accrued interest given as of date, maturity, coupon and coupon frequency
@@ -317,7 +318,7 @@ def find_matching_interval_in_curve(time_to_cf: float, curve: Dict[float, float]
 
 
 def calc_interpolated_rate_from_interval_curve(
-    interval_curve: Dict[float, float], time_to_cf: float
+        interval_curve: Dict[float, float], time_to_cf: float
 ) -> float:
     if len(interval_curve) == 1:
         ir = interval_curve[list(interval_curve)[0]]
@@ -342,12 +343,12 @@ def calc_discount_factor_given_ir_and_time_to_cf(ir: float, time_to_cf: float) -
 
 
 def calc_pv_of_vanilla_bond(
-    adate: datetime.date,
-    maturity: datetime.date,
-    coupon: float,
-    curve: Dict[float, float],
-    freq: int = 2,
-    days_per_year: int = 365,
+        adate: datetime.date,
+        maturity: datetime.date,
+        coupon: float,
+        curve: Dict[float, float],
+        freq: int = 2,
+        days_per_year: int = 365,
 ) -> float:
     """
     Calculate PV of vanilla bond

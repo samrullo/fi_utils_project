@@ -1,5 +1,5 @@
-
 import datetime
+
 
 def compute_linear_amortization_schedule(
     initial_book_price: float,
@@ -22,7 +22,9 @@ def compute_linear_amortization_schedule(
     total_periods = int(total_years / period_length_years)
 
     if total_periods <= 0:
-        raise ValueError("Bond is at or past maturity or period_length_years is too large.")
+        raise ValueError(
+            "Bond is at or past maturity or period_length_years is too large."
+        )
 
     change_per_period = (par - initial_book_price) / total_periods
 
